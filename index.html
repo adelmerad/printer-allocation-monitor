@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Moniteur — Allocation Imprimantes</title>
+<title>Printer Allocation Monitor</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -110,117 +110,117 @@
 
 <div class="header-row">
   <div>
-    <h1>Moniteur — Allocation d'imprimantes</h1>
-    <p class="subtitle">N = <span id="v-n">5</span> imprimantes &middot; Priorit&eacute; syst&egrave;me sur utilisateur</p>
+    <h1>Printer Allocation Monitor</h1>
+    <p class="subtitle">N = <span id="v-n">5</span> printers &middot; System processes have priority over user processes</p>
   </div>
-  <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" aria-label="Changer de th&egrave;me" title="Changer de th&egrave;me">🌙</button>
+  <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" aria-label="Change theme" title="Change theme">🌙</button>
 </div>
 
 <div class="top-bar">
-  <div class="metric"><div class="metric-label">Dispo (libres)</div><div class="metric-val green" id="v-dispo">5</div></div>
-  <div class="metric"><div class="metric-label">File syst&egrave;me</div><div class="metric-val purple" id="v-fsys">0</div></div>
-  <div class="metric"><div class="metric-label">File utilisateur</div><div class="metric-val amber" id="v-fusr">0</div></div>
+  <div class="metric"><div class="metric-label">Available</div><div class="metric-val green" id="v-avail">5</div></div>
+  <div class="metric"><div class="metric-label">System queue</div><div class="metric-val purple" id="v-fsys">0</div></div>
+  <div class="metric"><div class="metric-label">User queue</div><div class="metric-val amber" id="v-fusr">0</div></div>
 </div>
 
 <div class="starve-banner" id="starve-banner" role="alert" style="display:none"></div>
 
 <div class="main-grid">
   <div class="panel">
-    <div class="panel-title">🖨️ Imprimantes</div>
+    <div class="panel-title">🖨️ Printers</div>
     <div class="printers" id="printers"></div>
     <div class="gauge-bar"><div class="gauge-fill" id="gauge-fill" style="width:0%"></div></div>
-    <div class="gauge-caption" id="gauge-caption">0 / 5 occup&eacute;es</div>
+    <div class="gauge-caption" id="gauge-caption">0 / 5 in use</div>
   </div>
   <div class="panel">
-    <div class="panel-title">📋 Files d'attente</div>
-    <p class="sec-title" style="color:var(--purple)">Syst&egrave;me</p>
+    <div class="panel-title">📋 Waiting queues</div>
+    <p class="sec-title" style="color:var(--purple)">System</p>
     <div class="queue-list" id="qsys"></div>
-    <p class="sec-title" style="color:var(--green);margin-top:10px">Utilisateur</p>
+    <p class="sec-title" style="color:var(--green);margin-top:10px">User</p>
     <div class="queue-list" id="qusr"></div>
   </div>
 </div>
 
 <div class="panel">
-  <div class="panel-title">📊 Statistiques cumul&eacute;es</div>
+  <div class="panel-title">📊 Cumulative statistics</div>
   <div class="stats-grid">
-    <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-label">Demandes totales</div></div>
-    <div class="stat"><div class="stat-val" id="s-immediate">0</div><div class="stat-label">Allou&eacute;es imm&eacute;diatement</div></div>
-    <div class="stat"><div class="stat-val" id="s-unblocked">0</div><div class="stat-label">D&eacute;bloqu&eacute;es apr&egrave;s attente</div></div>
-    <div class="stat"><div class="stat-val" id="s-peak">0</div><div class="stat-label">Pic d'occupation</div></div>
+    <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-label">Total requests</div></div>
+    <div class="stat"><div class="stat-val" id="s-immediate">0</div><div class="stat-label">Granted immediately</div></div>
+    <div class="stat"><div class="stat-val" id="s-unblocked">0</div><div class="stat-label">Unblocked after waiting</div></div>
+    <div class="stat"><div class="stat-val" id="s-peak">0</div><div class="stat-label">Peak usage</div></div>
   </div>
 </div>
 
 <div class="panel">
-  <div class="panel-title">🎬 Visualisation animée</div>
+  <div class="panel-title">🎬 Animated view</div>
   <canvas id="flowCanvas" aria-hidden="true"></canvas>
-  <p class="note">Les jetons colorés représentent les mouvements en cours : violet = déblocage système, vert = déblocage utilisateur, bleu = allocation immédiate / imprimantes rendues.</p>
+  <p class="note">Colored tokens show what is happening: purple = system process unblocked, green = user process unblocked, blue = immediate allocation or printers returned.</p>
 </div>
 
 <div class="controls">
   <div class="ctrl-group">
     <label>Type</label>
-    <select id="req-type"><option value="sys">Syst&egrave;me</option><option value="usr">Utilisateur</option></select>
+    <select id="req-type"><option value="sys">System</option><option value="usr">User</option></select>
   </div>
   <div class="ctrl-group">
-    <label>Demander K =</label>
-    <input type="number" id="req-k" value="2" min="1" max="5" onkeydown="if(event.key==='Enter')doDemander();">
+    <label>Request K =</label>
+    <input type="number" id="req-k" value="2" min="1" max="5" onkeydown="if(event.key==='Enter')doRequest();">
   </div>
-  <button id="btn-demander" onclick="doDemander()">Demander</button>
+  <button id="btn-request" onclick="doRequest()">Request</button>
   <div class="ctrl-group">
-    <label>Lib&eacute;rer m =</label>
-    <input type="number" id="rel-m" value="2" min="1" max="5" onkeydown="if(event.key==='Enter')doLiberer();">
+    <label>Release m =</label>
+    <input type="number" id="rel-m" value="2" min="1" max="5" onkeydown="if(event.key==='Enter')doRelease();">
   </div>
-  <button id="btn-liberer" onclick="doLiberer()">Lib&eacute;rer</button>
+  <button id="btn-release" onclick="doRelease()">Release</button>
   <button class="danger" id="btn-reset" onclick="resetAll()">Reset</button>
 </div>
 
 <div class="controls">
   <div class="ctrl-group">
-    <label>N imprimantes</label>
+    <label>N printers</label>
     <input type="number" id="cfg-n" value="5" min="1" max="20">
   </div>
-  <button onclick="applyN()">Appliquer N</button>
+  <button onclick="applyN()">Apply N</button>
   <div class="ctrl-group">
-    <label>Vitesse</label>
+    <label>Speed</label>
     <select id="speed">
-      <option value="0">Instantan&eacute;e</option>
-      <option value="250">Rapide</option>
-      <option value="550" selected>Normale</option>
-      <option value="1100">Lente</option>
+      <option value="0">Instant</option>
+      <option value="250">Fast</option>
+      <option value="550" selected>Normal</option>
+      <option value="1100">Slow</option>
     </select>
   </div>
-  <button id="btn-scenario" onclick="runScenario()">▶ Sc&eacute;nario de d&eacute;mo</button>
-  <button id="btn-auto" onclick="toggleAuto()">⏵ Simulation auto</button>
-  <button onclick="exportLog()">⤓ Export journal</button>
+  <button id="btn-scenario" onclick="runScenario()">▶ Demo scenario</button>
+  <button id="btn-auto" onclick="toggleAuto()">⏵ Auto simulation</button>
+  <button onclick="exportLog()">⤓ Export log</button>
 </div>
 
 <div class="log-wrap" id="log" role="log" aria-live="polite"></div>
 
 <div class="code-box">
-<b>Proc&eacute;dure <span class="fn">Demander</span>(K, type)</b><br>
-&nbsp; <span class="kw">si</span> (Dispo &lt; K) <span class="kw">alors</span><br>
+<b>Procedure <span class="fn">Request</span>(K, type)</b><br>
+&nbsp; <span class="kw">if</span> (Available &lt; K) <span class="kw">then</span><br>
 &nbsp;&nbsp;&nbsp; <span class="kw">switch</span>(type):<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="kw">case</span> syst&egrave;me: enfiler(FilSys, K-Dispo); Dispo=0; <span class="fn">syst.wait</span>;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="kw">case</span> utilisateur: enfiler(FilUsr, K); <span class="fn">user.wait</span>;<br>
-&nbsp; <span class="kw">sinon</span> Dispo = Dispo - K;<br>
-&nbsp; <span class="kw">fsi</span>;<br><br>
-<b>Proc&eacute;dure <span class="fn">Lib&eacute;rer</span>(m)</b><br>
-&nbsp; <span class="step-badge sb0" id="badge0">&Eacute;tape 0</span>Dispo = Dispo + m;<br>
-&nbsp; <span class="kw">tantque</span>(syst.empty==<span class="kw">faux</span> <span class="kw">et</span> Dispo &gt;= T&ecirc;te(FilSys)) <span class="kw">faire</span><br>
-&nbsp;&nbsp;&nbsp; <span class="step-badge sb1" id="badge1">&Eacute;tape 1</span>Dispo -= T&ecirc;te(FilSys); D&eacute;filer(FilSys); <span class="fn">syst.signal</span>;<br>
-&nbsp; <span class="kw">fait</span><br>
-&nbsp; <span class="kw">si</span>(syst.empty==<span class="kw">faux</span>) <span class="kw">alors</span><br>
-&nbsp;&nbsp;&nbsp; <span class="step-badge sb2" id="badge2">&Eacute;tape 2</span>T&ecirc;te(FilSys) = T&ecirc;te(FilSys) - Dispo; Dispo = 0;<br>
-&nbsp; <span class="kw">fsi</span>;<br>
-&nbsp; <span class="kw">tantque</span>(User.empty==<span class="kw">faux</span> <span class="kw">et</span> Dispo &gt;= T&ecirc;te(FilUsr)) <span class="kw">faire</span><br>
-&nbsp;&nbsp;&nbsp; <span class="step-badge sb3" id="badge3">&Eacute;tape 3</span>Dispo -= T&ecirc;te(FilUsr); D&eacute;filer(FilUsr); <span class="fn">user.signal</span>;<br>
-&nbsp; <span class="kw">fait</span>
-<div class="note">Garde de s&eacute;curit&eacute; : Lib&eacute;rer(m) est refus&eacute; si m d&eacute;passe le nombre d'imprimantes r&eacute;ellement occup&eacute;es, ce qui garantit l'invariant 0 &le; Dispo &le; N.</div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="kw">case</span> system: enqueue(SysQueue, K-Available); Available=0; <span class="fn">syst.wait</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="kw">case</span> user: enqueue(UsrQueue, K); <span class="fn">user.wait</span>;<br>
+&nbsp; <span class="kw">else</span> Available = Available - K;<br>
+&nbsp; <span class="kw">end if</span>;<br><br>
+<b>Procedure <span class="fn">Release</span>(m)</b><br>
+&nbsp; <span class="step-badge sb0" id="badge0">Step 0</span>Available = Available + m;<br>
+&nbsp; <span class="kw">while</span>(syst.empty==<span class="kw">false</span> <span class="kw">and</span> Available &gt;= Head(SysQueue)) <span class="kw">do</span><br>
+&nbsp;&nbsp;&nbsp; <span class="step-badge sb1" id="badge1">Step 1</span>Available -= Head(SysQueue); Dequeue(SysQueue); <span class="fn">syst.signal</span>;<br>
+&nbsp; <span class="kw">end while</span><br>
+&nbsp; <span class="kw">if</span>(syst.empty==<span class="kw">false</span>) <span class="kw">then</span><br>
+&nbsp;&nbsp;&nbsp; <span class="step-badge sb2" id="badge2">Step 2</span>Head(SysQueue) = Head(SysQueue) - Available; Available = 0;<br>
+&nbsp; <span class="kw">end if</span>;<br>
+&nbsp; <span class="kw">while</span>(User.empty==<span class="kw">false</span> <span class="kw">and</span> Available &gt;= Head(UsrQueue)) <span class="kw">do</span><br>
+&nbsp;&nbsp;&nbsp; <span class="step-badge sb3" id="badge3">Step 3</span>Available -= Head(UsrQueue); Dequeue(UsrQueue); <span class="fn">user.signal</span>;<br>
+&nbsp; <span class="kw">end while</span>
+<div class="note">Safety guard: Release(m) is refused if m exceeds the number of printers actually in use, which guarantees the invariant 0 &le; Available &le; N.</div>
 </div>
 
 <script>
 let N = 5;
-let dispo = N, fileSys = [], fileUsr = [];
+let available = N, sysQueue = [], usrQueue = [];
 let procCounter = { sys: 0, usr: 0 };
 let stats = { total: 0, immediate: 0, unblocked: 0, peak: 0 };
 let usrStarveStreak = 0;
@@ -320,29 +320,29 @@ function drawCanvas() {
 
   ctx.textAlign = 'left';
   ctx.fillStyle = cssVar('--purple-fg');
-  ctx.fillText('Système (' + fileSys.length + ')', 4, 24);
-  for (let i = 0; i < Math.min(fileSys.length, 6); i++) {
+  ctx.fillText('System (' + sysQueue.length + ')', 4, 24);
+  for (let i = 0; i < Math.min(sysQueue.length, 6); i++) {
     const p = sysQueuePos(i);
     ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
     ctx.fillStyle = cssVar('--purple-bg'); ctx.fill();
     ctx.strokeStyle = cssVar('--purple-border'); ctx.stroke();
   }
-  if (fileSys.length > 6) {
+  if (sysQueue.length > 6) {
     ctx.fillStyle = cssVar('--muted');
-    ctx.fillText('+' + (fileSys.length - 6), 4, 44 + 6 * 18 + 4);
+    ctx.fillText('+' + (sysQueue.length - 6), 4, 44 + 6 * 18 + 4);
   }
 
   ctx.fillStyle = cssVar('--green-fg');
-  ctx.fillText('Utilisateur (' + fileUsr.length + ')', 4, h / 2 + 24);
-  for (let i = 0; i < Math.min(fileUsr.length, 6); i++) {
+  ctx.fillText('User (' + usrQueue.length + ')', 4, h / 2 + 24);
+  for (let i = 0; i < Math.min(usrQueue.length, 6); i++) {
     const p = usrQueuePos(i);
     ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
     ctx.fillStyle = cssVar('--green-bg'); ctx.fill();
     ctx.strokeStyle = cssVar('--green-border'); ctx.stroke();
   }
-  if (fileUsr.length > 6) {
+  if (usrQueue.length > 6) {
     ctx.fillStyle = cssVar('--muted');
-    ctx.fillText('+' + (fileUsr.length - 6), 4, h / 2 + 34 + 6 * 18 + 4);
+    ctx.fillText('+' + (usrQueue.length - 6), 4, h / 2 + 34 + 6 * 18 + 4);
   }
 
   const cell = 26;
@@ -354,10 +354,10 @@ function drawCanvas() {
   ctx.textAlign = 'center';
   ctx.font = '9px system-ui, sans-serif';
   ctx.fillStyle = cssVar('--muted');
-  ctx.fillText('Pool (' + (N - dispo) + '/' + N + ' occupées)', poolX0 + poolW / 2, 12);
+  ctx.fillText('Pool (' + (N - available) + '/' + N + ' in use)', poolX0 + poolW / 2, 12);
   for (let i = 0; i < N; i++) {
     const col = i % cols, row = Math.floor(i / cols);
-    drawPrinterIcon(ctx, startX + col * cell, startY + row * cell, cell - 6, i < dispo);
+    drawPrinterIcon(ctx, startX + col * cell, startY + row * cell, cell - 6, i < available);
   }
 
   const now = performance.now();
@@ -386,47 +386,47 @@ function drawCanvas() {
 }
 
 function setControlsDisabled(disabled) {
-  ['btn-demander', 'btn-liberer', 'btn-reset', 'btn-scenario'].forEach(id => {
+  ['btn-request', 'btn-release', 'btn-reset', 'btn-scenario'].forEach(id => {
     document.getElementById(id).disabled = disabled;
   });
 }
 
 function render() {
   document.getElementById('v-n').textContent = N;
-  document.getElementById('v-dispo').textContent = dispo;
-  document.getElementById('v-fsys').textContent = fileSys.length;
-  document.getElementById('v-fusr').textContent = fileUsr.length;
+  document.getElementById('v-avail').textContent = available;
+  document.getElementById('v-fsys').textContent = sysQueue.length;
+  document.getElementById('v-fusr').textContent = usrQueue.length;
 
   const pc = document.getElementById('printers');
   pc.innerHTML = '';
   for (let i = 0; i < N; i++) {
     const s = document.createElement('div');
-    s.className = 'printer-slot ' + (i < dispo ? 'free' : 'used');
-    const label = i < dispo ? 'Libre' : 'Occupée';
+    s.className = 'printer-slot ' + (i < available ? 'free' : 'used');
+    const label = i < available ? 'Free' : 'In use';
     s.title = label;
-    s.setAttribute('aria-label', 'Imprimante ' + (i + 1) + ' : ' + label);
+    s.setAttribute('aria-label', 'Printer ' + (i + 1) + ': ' + label);
     s.textContent = '🖨';
     pc.appendChild(s);
   }
 
-  const occupied = N - dispo;
+  const occupied = N - available;
   stats.peak = Math.max(stats.peak, occupied);
   document.getElementById('gauge-fill').style.width = (N ? (occupied / N * 100) : 0) + '%';
-  document.getElementById('gauge-caption').textContent = occupied + ' / ' + N + ' occupées';
+  document.getElementById('gauge-caption').textContent = occupied + ' / ' + N + ' in use';
 
   const qs = document.getElementById('qsys');
-  qs.innerHTML = fileSys.length === 0
-    ? '<div class="queue-empty">&mdash; vide &mdash;</div>'
-    : fileSys.map(e => `<div class="queue-item sys"><span class="qname">${e.name}</span><span class="qval">attend ${e.k} imprimante(s)</span></div>`).join('');
+  qs.innerHTML = sysQueue.length === 0
+    ? '<div class="queue-empty">&mdash; empty &mdash;</div>'
+    : sysQueue.map(e => `<div class="queue-item sys"><span class="qname">${e.name}</span><span class="qval">waiting for ${e.k} printer(s)</span></div>`).join('');
   const qu = document.getElementById('qusr');
-  qu.innerHTML = fileUsr.length === 0
-    ? '<div class="queue-empty">&mdash; vide &mdash;</div>'
-    : fileUsr.map(e => `<div class="queue-item usr"><span class="qname">${e.name}</span><span class="qval">attend ${e.k} imprimante(s)</span></div>`).join('');
+  qu.innerHTML = usrQueue.length === 0
+    ? '<div class="queue-empty">&mdash; empty &mdash;</div>'
+    : usrQueue.map(e => `<div class="queue-item usr"><span class="qname">${e.name}</span><span class="qval">waiting for ${e.k} printer(s)</span></div>`).join('');
 
   const banner = document.getElementById('starve-banner');
-  if (usrStarveStreak >= 2 && fileUsr.length > 0) {
+  if (usrStarveStreak >= 2 && usrQueue.length > 0) {
     banner.style.display = 'block';
-    banner.textContent = `⚠️ File utilisateur non servie depuis ${usrStarveStreak} libération(s) consécutive(s) — risque de famine (starvation).`;
+    banner.textContent = `⚠️ User queue not served for ${usrStarveStreak} consecutive release(s): risk of starvation.`;
   } else {
     banner.style.display = 'none';
   }
@@ -461,43 +461,43 @@ function setType(t) { document.getElementById('req-type').value = t; }
 function setK(k) { document.getElementById('req-k').value = k; }
 function setM(m) { document.getElementById('rel-m').value = m; }
 
-function doDemander() {
-  if (busy) { log('Opération en cours, patientez…', 'err'); return; }
+function doRequest() {
+  if (busy) { log('Operation in progress, please wait…', 'err'); return; }
   const type = document.getElementById('req-type').value;
   const k = parseInt(document.getElementById('req-k').value);
-  if (!k || k < 1 || k > N) { log('Valeur K invalide (1 a ' + N + ')', 'err'); return; }
+  if (!k || k < 1 || k > N) { log('Invalid K value (1 to ' + N + ')', 'err'); return; }
   stats.total++;
   procCounter[type]++;
   const name = (type === 'sys' ? 'Sys-' : 'Usr-') + procCounter[type];
-  log('-> [' + name + '] demande ' + k + ' imprimante(s)', 'req');
-  if (dispo < k) {
+  log('-> [' + name + '] requests ' + k + ' printer(s)', 'req');
+  if (available < k) {
     if (type === 'sys') {
-      const need = k - dispo;
-      fileSys.push({ name, k: need });
-      log('  Dispo(' + dispo + ') < K(' + k + ') -> FileSys <- besoin residuel=' + need + ', Dispo -> 0', 'step1');
-      dispo = 0;
-      spawnParticle(arrivalPos(), sysQueuePos(fileSys.length - 1), cssVar('--purple'));
+      const need = k - available;
+      sysQueue.push({ name, k: need });
+      log('  Available(' + available + ') < K(' + k + ') -> SysQueue <- remaining need=' + need + ', Available -> 0', 'step1');
+      available = 0;
+      spawnParticle(arrivalPos(), sysQueuePos(sysQueue.length - 1), cssVar('--purple'));
     } else {
-      fileUsr.push({ name, k });
-      log('  Dispo(' + dispo + ') < K(' + k + ') -> FileUsr <- ' + k + ' -- bloque', 'step1');
-      spawnParticle(arrivalPos(), usrQueuePos(fileUsr.length - 1), cssVar('--green'));
+      usrQueue.push({ name, k });
+      log('  Available(' + available + ') < K(' + k + ') -> UsrQueue <- ' + k + ' -- blocked', 'step1');
+      spawnParticle(arrivalPos(), usrQueuePos(usrQueue.length - 1), cssVar('--green'));
     }
   } else {
-    dispo -= k;
+    available -= k;
     stats.immediate++;
-    log('  Dispo suffisant -> Dispo = ' + dispo, 'step0');
+    log('  Enough available -> Available = ' + available, 'step0');
     spawnParticle(arrivalPos(), poolCentroid(), cssVar('--blue'));
   }
   render();
 }
 
-async function doLiberer() {
-  if (busy) { log('Opération en cours, patientez…', 'err'); return; }
+async function doRelease() {
+  if (busy) { log('Operation in progress, please wait…', 'err'); return; }
   const m = parseInt(document.getElementById('rel-m').value);
-  if (!m || m < 1) { log('Valeur m invalide', 'err'); return; }
-  const occupied = N - dispo;
+  if (!m || m < 1) { log('Invalid m value', 'err'); return; }
+  const occupied = N - available;
   if (m > occupied) {
-    log(`Impossible de libérer ${m} imprimante(s) : seulement ${occupied} sont actuellement occupées.`, 'err');
+    log(`Cannot release ${m} printer(s): only ${occupied} currently in use.`, 'err');
     return;
   }
 
@@ -506,9 +506,9 @@ async function doLiberer() {
   setControlsDisabled(true);
   const delay = stepDelay();
 
-  log('<- Libération de ' + m + ' imprimante(s)', 'req');
-  log('  [Étape 0] Dispo = ' + dispo + ' + ' + m + ' = ' + (dispo + m), 'step0');
-  dispo += m;
+  log('<- Releasing ' + m + ' printer(s)', 'req');
+  log('  [Step 0] Available = ' + available + ' + ' + m + ' = ' + (available + m), 'step0');
+  available += m;
   spawnParticle(releasePos(), poolCentroid(), cssVar('--blue'));
   render();
   if (delay) await sleep(delay);
@@ -516,12 +516,12 @@ async function doLiberer() {
 
   let userServed = false;
   let it = 0;
-  while (fileSys.length > 0 && dispo >= fileSys[0].k) {
-    const p = fileSys[0];
-    log('  [Étape 1] Débloquer ' + p.name + ' (besoin ' + p.k + ') -> Dispo = ' + dispo + ' - ' + p.k + ' = ' + (dispo - p.k), 'step1');
+  while (sysQueue.length > 0 && available >= sysQueue[0].k) {
+    const p = sysQueue[0];
+    log('  [Step 1] Unblock ' + p.name + ' (needs ' + p.k + ') -> Available = ' + available + ' - ' + p.k + ' = ' + (available - p.k), 'step1');
     spawnParticle(sysQueuePos(0), poolCentroid(), cssVar('--purple'));
-    dispo -= p.k;
-    fileSys.shift();
+    available -= p.k;
+    sysQueue.shift();
     stats.unblocked++;
     render();
     if (delay) await sleep(delay);
@@ -529,23 +529,23 @@ async function doLiberer() {
     if (++it > 50) break;
   }
 
-  if (fileSys.length > 0 && dispo > 0) {
-    const head = fileSys[0];
-    log('  [Étape 2] Pas assez pour ' + head.name + ' (besoin ' + head.k + ') -> réserver ' + dispo + ', Tête <- ' + (head.k - dispo) + ', Dispo -> 0', 'step2');
+  if (sysQueue.length > 0 && available > 0) {
+    const head = sysQueue[0];
+    log('  [Step 2] Not enough for ' + head.name + ' (needs ' + head.k + ') -> reserve ' + available + ', Head <- ' + (head.k - available) + ', Available -> 0', 'step2');
     spawnPulse(sysQueuePos(0), cssVar('--amber'));
-    fileSys[0] = { name: head.name, k: head.k - dispo };
-    dispo = 0;
+    sysQueue[0] = { name: head.name, k: head.k - available };
+    available = 0;
     render();
     if (delay) await sleep(delay);
     if (runToken !== myToken) return;
-  } else if (fileSys.length === 0) {
+  } else if (sysQueue.length === 0) {
     let it2 = 0;
-    while (fileUsr.length > 0 && dispo >= fileUsr[0].k) {
-      const p = fileUsr[0];
-      log('  [Étape 3] Débloquer ' + p.name + ' (besoin ' + p.k + ') -> Dispo = ' + dispo + ' - ' + p.k + ' = ' + (dispo - p.k), 'step3');
+    while (usrQueue.length > 0 && available >= usrQueue[0].k) {
+      const p = usrQueue[0];
+      log('  [Step 3] Unblock ' + p.name + ' (needs ' + p.k + ') -> Available = ' + available + ' - ' + p.k + ' = ' + (available - p.k), 'step3');
       spawnParticle(usrQueuePos(0), poolCentroid(), cssVar('--green'));
-      dispo -= p.k;
-      fileUsr.shift();
+      available -= p.k;
+      usrQueue.shift();
       stats.unblocked++;
       userServed = true;
       render();
@@ -553,14 +553,14 @@ async function doLiberer() {
       if (runToken !== myToken) return;
       if (++it2 > 50) break;
     }
-    if (dispo > 0 && fileUsr.length === 0) {
-      log('  [Étape 3] Files vides -- Dispo = ' + dispo + ' reste disponible.', 'step3');
-    } else if (dispo > 0) {
-      log('  [Étape 3] Dispo(' + dispo + ') insuffisant pour ' + fileUsr[0].name + ' -- arrêt.', 'step3');
+    if (available > 0 && usrQueue.length === 0) {
+      log('  [Step 3] Queues empty -- Available = ' + available + ' remains free.', 'step3');
+    } else if (available > 0) {
+      log('  [Step 3] Available(' + available + ') not enough for ' + usrQueue[0].name + ' -- stop.', 'step3');
     }
   }
 
-  usrStarveStreak = (fileUsr.length > 0 && !userServed) ? usrStarveStreak + 1 : 0;
+  usrStarveStreak = (usrQueue.length > 0 && !userServed) ? usrStarveStreak + 1 : 0;
 
   busy = false;
   setControlsDisabled(false);
@@ -569,39 +569,39 @@ async function doLiberer() {
 
 function applyN() {
   const val = parseInt(document.getElementById('cfg-n').value);
-  if (!val || val < 1 || val > 20) { log('Valeur de N invalide (1 a 20)', 'err'); return; }
+  if (!val || val < 1 || val > 20) { log('Invalid N value (1 to 20)', 'err'); return; }
   N = val;
   document.getElementById('req-k').max = N;
   document.getElementById('rel-m').max = N;
   resetAll();
-  log(`Configuration mise à jour : N = ${N} imprimantes.`, 'req');
+  log(`Configuration updated: N = ${N} printers.`, 'req');
 }
 
 async function runScenario() {
-  if (busy || autoOn) { log('Terminez l’opération ou la simulation auto avant de lancer le scénario.', 'err'); return; }
+  if (busy || autoOn) { log('Finish the current operation or auto simulation before starting the scenario.', 'err'); return; }
   document.getElementById('btn-scenario').disabled = true;
   resetAll();
-  log('▶ Scénario de démonstration lancé (voir README)', 'req');
+  log('▶ Demo scenario started (see README)', 'req');
   await sleep(400);
-  setType('sys'); setK(Math.min(3, N)); doDemander(); await sleep(700);
-  setType('sys'); setK(Math.min(3, N)); doDemander(); await sleep(700);
-  setType('usr'); setK(Math.min(2, N)); doDemander(); await sleep(700);
-  setM(Math.min(2, N)); await doLiberer();
-  log('■ Scénario terminé.', 'req');
+  setType('sys'); setK(Math.min(3, N)); doRequest(); await sleep(700);
+  setType('sys'); setK(Math.min(3, N)); doRequest(); await sleep(700);
+  setType('usr'); setK(Math.min(2, N)); doRequest(); await sleep(700);
+  setM(Math.min(2, N)); await doRelease();
+  log('■ Scenario finished.', 'req');
   document.getElementById('btn-scenario').disabled = false;
 }
 
 async function autoTick() {
   if (busy) return;
-  const occupied = N - dispo;
+  const occupied = N - available;
   const wantRelease = occupied > 0 && Math.random() < 0.4;
   if (wantRelease) {
     setM(1 + Math.floor(Math.random() * occupied));
-    await doLiberer();
+    await doRelease();
   } else {
     setType(Math.random() < 0.3 ? 'sys' : 'usr');
     setK(1 + Math.floor(Math.random() * N));
-    doDemander();
+    doRequest();
   }
 }
 
@@ -612,10 +612,10 @@ function toggleAuto() {
     btn.textContent = '⏸ Pause simulation';
     btn.classList.add('active');
     autoTimer = setInterval(autoTick, 1600);
-    log('▶ Simulation automatique démarrée', 'req');
+    log('▶ Auto simulation started', 'req');
   } else {
     stopAuto();
-    log('⏸ Simulation automatique arrêtée', 'req');
+    log('⏸ Auto simulation stopped', 'req');
   }
 }
 
@@ -623,18 +623,18 @@ function stopAuto() {
   autoOn = false;
   clearInterval(autoTimer);
   const btn = document.getElementById('btn-auto');
-  btn.textContent = '⏵ Simulation auto';
+  btn.textContent = '⏵ Auto simulation';
   btn.classList.remove('active');
 }
 
 function exportLog() {
   const lines = Array.from(document.querySelectorAll('#log .log-line')).map(d => d.textContent);
-  if (lines.length === 0) { log('Journal vide, rien à exporter.', 'err'); return; }
+  if (lines.length === 0) { log('Log is empty, nothing to export.', 'err'); return; }
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'journal-moniteur-imprimantes.txt';
+  a.download = 'printer-monitor-log.txt';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -649,7 +649,7 @@ function toggleTheme() {
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   document.getElementById('btn-theme').textContent = theme === 'dark' ? '☀️' : '🌙';
-  localStorage.setItem('moniteur-theme', theme);
+  localStorage.setItem('printer-monitor-theme', theme);
   drawCanvas();
 }
 
@@ -658,19 +658,19 @@ function resetAll() {
   busy = false;
   setControlsDisabled(false);
   if (autoOn) stopAuto();
-  dispo = N; fileSys = []; fileUsr = [];
+  available = N; sysQueue = []; usrQueue = [];
   procCounter = { sys: 0, usr: 0 };
   stats = { total: 0, immediate: 0, unblocked: 0, peak: 0 };
   usrStarveStreak = 0;
   document.getElementById('log').innerHTML = '';
-  log(`— Prêt. N = ${N} imprimantes disponibles. —`);
+  log(`— Ready. N = ${N} printers available. —`);
   render();
 }
 
 (function init() {
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
-  const savedTheme = localStorage.getItem('moniteur-theme')
+  const savedTheme = localStorage.getItem('printer-monitor-theme')
     || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   setTheme(savedTheme);
   resetAll();
